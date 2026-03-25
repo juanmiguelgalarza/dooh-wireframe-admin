@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmark Comparativo - Ticketeras</title>
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background: #F4F4F2;
+    padding: 48px;
+    min-width: 1600px;
+  }
+  .page-header { margin-bottom: 32px; }
+  .page-title { font-size: 28px; font-weight: 700; color: #1A1A1A; letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 14px; color: #888; margin-top: 6px; font-weight: 400; }
+  .legend { display: flex; gap: 24px; margin-top: 16px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #555; }
+  .legend-check { width: 20px; height: 20px; background: #2B2B2B; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; }
+  .legend-empty { width: 20px; height: 20px; background: #E8E8E6; border-radius: 4px; }
+  .badge-nacional { display: inline-block; background: #E5542B; color: white; font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 3px; margin-top: 4px; letter-spacing: 0.5px; }
+  .badge-internacional { display: inline-block; background: #4A90D9; color: white; font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 3px; margin-top: 4px; letter-spacing: 0.5px; }
+  .table-wrapper { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+  .table-scroll { overflow: auto; max-height: calc(100vh - 220px); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .header-row th { background: #1E1E1E; color: white; font-weight: 600; font-size: 11px; text-align: center; padding: 14px 8px; letter-spacing: 0.3px; vertical-align: bottom; border-right: 1px solid #333; white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+  .header-row th:first-child { text-align: left; padding-left: 20px; width: 200px; min-width: 200px; }
+  .header-row th:nth-child(2) { text-align: left; width: 220px; min-width: 220px; padding-left: 12px; }
+  .col-nacional { border-top: 3px solid #E5542B; }
+  .col-internacional { border-top: 3px solid #4A90D9; }
+  .company-name { font-size: 11px; font-weight: 700; line-height: 1.2; }
+  tr.section-header td { background: #E5542B; color: white; font-weight: 700; font-size: 11px; padding: 10px 20px; letter-spacing: 0.4px; text-transform: uppercase; border-bottom: none; }
+  tr.section-header td:not(:first-child) { border-right: 1px solid #D44A22; }
+  tr.sub-row td:first-child { background: transparent; color: transparent; font-size: 11px; }
+  tr.sub-row td:nth-child(2) { color: #444; font-size: 11px; padding: 9px 12px; border-bottom: 1px solid #ECECEA; vertical-align: middle; }
+  td.check { text-align: center; vertical-align: middle; padding: 8px; border-right: 1px solid #ECECEA; border-bottom: 1px solid #ECECEA; }
+  td.check .tick { width: 22px; height: 22px; background: #2B2B2B; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+  td.check.empty { background: #F9F9F7; }
+  tr:nth-child(even) td.check { background: #FAFAF8; }
+  tr:nth-child(even) td.check.empty { background: #F5F5F3; }
+  tr.section-header td.check { background: transparent !important; border: none; }
+  tr.number-row td:first-child { background: #2B2B2B; color: white; font-weight: 600; font-size: 11px; padding: 11px 20px; vertical-align: middle; }
+  tr.number-row td:nth-child(2) { color: #444; font-size: 11px; padding: 9px 12px; border-bottom: 1px solid #ECECEA; }
+  tr.number-row td.value-num { font-size: 12px; font-weight: 700; color: #1A1A1A; text-align: center; padding: 9px 8px; border-right: 1px solid #ECECEA; border-bottom: 1px solid #ECECEA; }
+  tr.number-row td.value-num.highlight { background: #FFF8F0; color: #E5542B; }
+  tr.number-row td.value-num.na { background: #F5F5F3; color: #AAA; font-weight: 400; }
+  tr.text-row td:first-child { background: #2B2B2B; color: white; font-weight: 600; font-size: 11px; padding: 11px 20px; vertical-align: top; }
+  tr.text-row td:nth-child(2) { color: #444; font-size: 10px; padding: 9px 12px; border-bottom: 1px solid #ECECEA; vertical-align: top; }
+  td.value-text { font-size: 10px; color: #555; padding: 9px 8px; text-align: left; vertical-align: top; border-right: 1px solid #ECECEA; border-bottom: 1px solid #ECECEA; line-height: 1.4; max-width: 120px; }
+  td.value-text.na-text { background: #F5F5F3; color: #AAA; text-align: center; font-style: italic; }
+  td:first-child, th:first-child { position: sticky; left: 0; z-index: 1; }
+  td:nth-child(2), th:nth-child(2) { position: sticky; left: 200px; z-index: 1; }
+  th:first-child, th:nth-child(2) { z-index: 3; }
+  /* Standalone row */
+  tr.standalone td:first-child { background: #2B2B2B; color: white; font-weight: 600; font-size: 11px; padding: 11px 20px; vertical-align: middle; }
+  tr.standalone td:nth-child(2) { color: #444; font-size: 11px; padding: 9px 12px; border-bottom: 1px solid #ECECEA; vertical-align: middle; }
+  /* Emoji cell */
+  td.emoji-cell { text-align: center; vertical-align: middle; padding: 8px; border-right: 1px solid #ECECEA; border-bottom: 1px solid #ECECEA; font-size: 22px; }
+</style>
+</head>
+<body>
+<div class="page-header">
+  <div class="page-title">Benchmark Comparativo — Ticketeras</div>
+  <div class="page-subtitle">Análisis de 12 plataformas de venta de tickets · Mercado Ecuador y referencias internacionales</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-check">✓</div><span>Disponible / Aplica</span></div>
+    <div class="legend-item"><div class="legend-empty"></div><span>No disponible</span></div>
+    <div class="legend-item"><div class="badge-nacional">NAC</div><span>Nacional</span></div>
+    <div class="legend-item"><div class="badge-internacional">INT</div><span>Internacional</span></div>
+  </div>
+</div>
+<div class="table-wrapper">
+<div class="table-scroll">
+<table>
+<thead>
+<tr class="header-row">
+  <th></th><th></th>
+  <th class="col-nacional"><div class="company-name">TicketShow</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">FeelThe<br>Tickets</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">FlashThe<br>Tickets</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">BuenPlan</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">TicketPago</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">Ticketmas</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">Super<br>Ticket</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">Red<br>Tickets</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-nacional"><div class="company-name">La<br>Ticketera</div><div class="badge-nacional">NAC</div></th>
+  <th class="col-internacional"><div class="company-name">Meet2Go</div><div class="badge-internacional">INT</div></th>
+  <th class="col-internacional"><div class="company-name">Ticket<br>master</div><div class="badge-internacional">INT</div></th>
+  <th class="col-internacional"><div class="company-name">TIXR</div><div class="badge-internacional">INT</div></th>
+</tr>
+</thead>
+<tbody>
+
+<!-- ==================== INFORMACIÓN GENERAL ==================== -->
+<tr class="section-header"><td colspan="14">Información General</td></tr>
+<tr class="number-row">
+  <td>Ingresos 2024 (USD)</td><td>—</td>
+  <td class="value-num">$1.4M</td><td class="value-num highlight">$1.8M</td><td class="value-num">$67K</td><td class="value-num">$458K</td><td class="value-num">$64K</td><td class="value-num na">N/D</td><td class="value-num na">N/D</td><td class="value-num">$81K</td><td class="value-num">$80K</td><td class="value-num na">N/D</td><td class="value-num na">N/D</td><td class="value-num na">N/D</td>
+</tr>
+<tr class="number-row">
+  <td>Ranking Ingresos</td><td>—</td>
+  <td class="value-num">2°</td><td class="value-num highlight">1°</td><td class="value-num">6°</td><td class="value-num">3°</td><td class="value-num">7°</td><td class="value-num na">—</td><td class="value-num na">—</td><td class="value-num">4°</td><td class="value-num">5°</td><td class="value-num na">—</td><td class="value-num na">—</td><td class="value-num na">—</td>
+</tr>
+<tr class="text-row">
+  <td>Enfoque</td><td>—</td>
+  <td class="value-text">Conciertos artistas internacionales (Sebastián Yatra, Laura Pausini, Andrés Cepeda, Milo J)</td>
+  <td class="value-text">Conciertos artistas internacionales (Steve Aoki, The Lumineers, Martin Garrix, Luis Miguel)</td>
+  <td class="value-text">Conciertos y teatro de artistas nacionales en su mayoría (Gerardo Morán, La Vecina)</td>
+  <td class="value-text">Mix equilibrado de varias categorías (Ed Sheeran, Iron Maiden, Combates de Box, Torneo de Polo)</td>
+  <td class="value-text na-text">Sin eventos disponibles</td>
+  <td class="value-text">Mayoritariamente eventos en la ciudad de Cuenca</td>
+  <td class="value-text">Eventos deportivos (LDU, Aucas, IDV, Macará, Técnico Universitario, El Nacional, Vinotinto)</td>
+  <td class="value-text">Eventos relacionados al Teatro / Cultura</td>
+  <td class="value-text">Fiestas y conciertos nacionales de menor envergadura</td>
+  <td class="value-text">Mix equilibrado de varias categorías en las ciudades más importantes del mundo</td>
+  <td class="value-text">Referente mundial tanto en eventos atendidos como servicios ofrecidos</td>
+  <td class="value-text">Abonos para eventos deportivos en EE.UU. y un mix de categorías</td>
+</tr>
+
+<!-- ==================== PAÍS DONDE OPERA ==================== -->
+<tr class="section-header"><td colspan="14">País donde Opera</td></tr>
+<tr class="sub-row"><td></td><td>Ecuador</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Colombia</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>España</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Francia</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Alemania</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Global (+30 países)</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Estados Unidos</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== CANALES DE VENTA ==================== -->
+<tr class="section-header"><td colspan="14">Canales de Venta</td></tr>
+<tr class="sub-row"><td></td><td>Página web</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Puntos de venta físicos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="text-row"><td></td><td>Ubicaciones</td>
+  <td class="value-text">Quito (Paseo San Francisco, Riocentro, CC El Recreo), Guayaquil (Riocentro Ceibos, Riocentro Entre Ríos, Mall del Sol), Cuenca (Mall del Río)</td>
+  <td class="value-text">Quito (CCI, Scala Shopping, Condado Shopping)</td>
+  <td class="value-text">Ambato (Mall de los Andes)</td>
+  <td class="value-text na-text">—</td><td class="value-text na-text">—</td>
+  <td class="value-text">Quito (CC Unicornio), Cuenca (Calle M. Sucre 6-12 y Hno. Miguel)</td>
+  <td class="value-text na-text">—</td><td class="value-text na-text">—</td><td class="value-text na-text">—</td><td class="value-text na-text">—</td><td class="value-text na-text">—</td><td class="value-text na-text">—</td>
+</tr>
+
+<!-- ==================== REGISTRO DE USUARIOS ==================== -->
+<tr class="section-header"><td colspan="14">Registro de Usuarios</td></tr>
+<tr class="sub-row"><td></td><td>Nacionales</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Extranjeros</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== TIPO DE EVENTOS ==================== -->
+<tr class="section-header"><td colspan="14">Tipo de Eventos Atendidos</td></tr>
+<tr class="sub-row"><td></td><td>Conciertos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Teatro / Cultura</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Deportivos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Ferias</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Fiestas</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Películas</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Nightlife</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Taller</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Corporativo</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Stand Up</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== FILTROS ==================== -->
+<tr class="section-header"><td colspan="14">Filtros Disponibles</td></tr>
+<tr class="sub-row"><td></td><td>Categoría</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Ciudad</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Fecha</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== SERVICIOS A USUARIOS ==================== -->
+<tr class="section-header"><td colspan="14">Servicios Ofrecidos a Usuarios Finales</td></tr>
+<tr class="sub-row"><td></td><td>Venta de tickets a eventos y conciertos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Venta de merchandising</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Venta de comida y bebidas</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Venta de estacionamiento</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Reventa fan-to-fan</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Reservas en hoteles</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Foto con el artista</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Meet &amp; Greet</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Acceso a la prueba de sonido previa al concierto</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Visita guiada entre bastidores</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== SERVICIOS A ORGANIZADORES ==================== -->
+<tr class="section-header"><td colspan="14">Servicios Ofrecidos a Organizadores / Marcas y Empresas que Realizan Eventos</td></tr>
+<tr class="sub-row"><td></td><td>Gestión y comercialización de tickets</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Impresión de códigos de barra en pulseras, credenciales</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Impresión personalizada de pulseras</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Servicio de acreditación</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Control de acceso el día del evento con lectoras</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Reportes en línea de tickets vendidos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Digitalización de mapas de los eventos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Promoción de eventos en página web y redes sociales</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Asesoría en la realización del evento</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Obtención de permisos</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Venta de merchandising</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Venta de comida y bebidas</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Venta de estacionamiento</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== COMUNICACIÓN MERCHANDISING ==================== -->
+<tr class="section-header"><td colspan="14">Comunicación de Merchandising / Menús de Comida, Bebidas en la Plataforma</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== MAPA DE ASIENTOS ==================== -->
+<tr class="section-header"><td colspan="14">Mapa de Asientos Interactivo</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== MÉTODOS DE ENTREGA ==================== -->
+<tr class="section-header"><td colspan="14">Métodos de Entrega de Tickets</td></tr>
+<tr class="sub-row"><td></td><td>Correo electrónico</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Punto de venta físico</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Domicilio</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== FORMAS DE PAGO ==================== -->
+<tr class="section-header"><td colspan="14">Formas de Pago Aceptadas</td></tr>
+<tr class="sub-row"><td></td><td>Tarjeta de crédito</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Tarjeta de débito</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>DEUNA</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Transferencia</td>
+  <td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Pago en efectivo</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Depósito bancario</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Apple Pay</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>PayPal</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== TARJETAS DE CRÉDITO ==================== -->
+<tr class="section-header"><td colspan="14">Tarjetas de Crédito Aceptadas</td></tr>
+<tr class="sub-row"><td></td><td>American Express</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Alia</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>VISA</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Mastercard</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Discover</td>
+  <td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Diners Club</td>
+  <td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== OFRECEN CÓDIGOS ==================== -->
+<tr class="section-header"><td colspan="14">Ofrecen Códigos / Cupones de Descuento</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== OFRECEN SEGUROS ==================== -->
+<tr class="section-header"><td colspan="14">Ofrecen Seguros</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== RESUMEN DEL PEDIDO ==================== -->
+<tr class="section-header"><td colspan="14">Resumen del Pedido</td></tr>
+<tr class="sub-row"><td></td><td>Nombre del evento</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Número del pedido</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Datos del usuario</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Localidad</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Fila - Asiento</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Subtotal</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Cantidad</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Descuento</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>IVA</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Valor Seguro</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Precio Total</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== POLÍTICAS DE REEMBOLSO ==================== -->
+<tr class="section-header"><td colspan="14">Políticas de Reembolso / Cancelaciones Visibles</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== CENTRO DE AYUDA ==================== -->
+<tr class="section-header"><td colspan="14">Centro de Ayuda</td></tr>
+<tr class="sub-row"><td></td><td>Página web</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Whatsapp</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Correo electrónico</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Chatbot</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+
+<!-- ==================== PROGRAMAS DE FIDELIZACIÓN ==================== -->
+<tr class="section-header"><td colspan="14">Programas de Fidelización</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== ALERTAS ==================== -->
+<tr class="section-header"><td colspan="14">Alertas Próximos Eventos y Conciertos</td></tr>
+<tr class="standalone"><td></td><td>Disponible</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== JOURNEY DE COMPRA ==================== -->
+<tr class="section-header"><td colspan="14">Journey de Compra</td></tr>
+<tr class="sub-row"><td></td><td>Registro de usuario</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Inicio de sesión</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Selección de evento</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Selección de localidad / asiento</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Selección tipo de envío</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td><td class="check empty"></td>
+</tr>
+<tr class="sub-row"><td></td><td>Selección método de pago</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Ingreso datos de pago</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Resumen de reserva</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+<tr class="sub-row"><td></td><td>Compra</td>
+  <td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check"><span class="tick">✓</span></td><td class="check empty"></td><td class="check"><span class="tick">✓</span></td>
+</tr>
+
+<!-- ==================== PASOS HASTA REALIZAR LA COMPRA ==================== -->
+<tr class="section-header"><td colspan="14">Pasos hasta Realizar la Compra</td></tr>
+<tr class="number-row">
+  <td>Total de pasos</td><td>—</td>
+  <td class="value-num">9</td><td class="value-num highlight">6</td><td class="value-num">8</td><td class="value-num">8</td><td class="value-num na">N/D</td><td class="value-num">8</td><td class="value-num na">N/D</td><td class="value-num">8</td><td class="value-num">8</td><td class="value-num">8</td><td class="value-num na">N/D</td><td class="value-num">8</td>
+</tr>
+
+<!-- ==================== USABILIDAD ==================== -->
+<tr class="section-header"><td colspan="14">Usabilidad</td></tr>
+<tr class="standalone"><td></td><td>Valoración</td>
+  <td class="emoji-cell">😊</td>
+  <td class="emoji-cell">😊</td>
+  <td class="emoji-cell">😄</td>
+  <td class="emoji-cell">😄</td>
+  <td class="emoji-cell">😐</td>
+  <td class="emoji-cell">😊</td>
+  <td class="emoji-cell">😟</td>
+  <td class="emoji-cell">😄</td>
+  <td class="emoji-cell">😟</td>
+  <td class="emoji-cell">😄</td>
+  <td class="emoji-cell">😐</td>
+  <td class="emoji-cell">😄</td>
+</tr>
+
+<!-- ==================== HALLAZGOS USABILIDAD ==================== -->
+<tr class="section-header"><td colspan="14">Hallazgos de Usabilidad</td></tr>
+<tr class="text-row">
+  <td>Observaciones</td><td>—</td>
+  <td class="value-text">Navegación amigable aunque el flujo de compra se siente extenso</td>
+  <td class="value-text">Navegación amigable aunque se deben llenar muchos campos de datos personales antes de realizar la compra</td>
+  <td class="value-text">Muy fácil de usar, el flujo de compra es corto</td>
+  <td class="value-text">Flujo simple y directo: un par de pantallas reúnen resumen de método de pago, datos de facturación, resumen de reserva</td>
+  <td class="value-text na-text">No es posible evaluar usabilidad en este momento debido a que no hay oferta de eventos</td>
+  <td class="value-text">Experiencia limpia: pasos cortos y claros antes de realizar la compra. A pesar de que el look &amp; feel de las pantallas es poco atractivo</td>
+  <td class="value-text">Navegación poco intuitiva y con problemas para iniciar sesión durante la compra de entradas</td>
+  <td class="value-text">Muy fácil de usar, el flujo de compra es corto</td>
+  <td class="value-text">Navegación poco intuitiva. Look &amp; feel de las pantallas poco atractivo</td>
+  <td class="value-text">Muy fácil de usar, el flujo de compra es corto</td>
+  <td class="value-text na-text">Cuesta determinar si la navegación es realmente amigable, no se logra iniciar sesión al no poder vincular un número de teléfono de fuera de Estados Unidos</td>
+  <td class="value-text">Navegación amigable con pasos cortos y claros antes de realizar la compra</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>
